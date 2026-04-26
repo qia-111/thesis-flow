@@ -165,12 +165,12 @@
 
   <div class="sidebar">
     <a href="/" class="sidebar-item">首页</a>
-    <a href="/format.html" class="sidebar-item">论文格式排版</a>
-    <a href="/reference.html" class="sidebar-item">参考文献生成</a>
-    <a href="/outline.html" class="sidebar-item">自动目录生成</a>
-    <a href="/proof.html" class="sidebar-item active">语法与错字校对</a>
-    <a href="/check.html" class="sidebar-item">合规语句优化</a>
-    <a href="/reduce.html" class="sidebar-item">智能降重</a>
+    <a href="/templates/format.html" class="sidebar-item">论文格式排版</a>
+    <a href="/templates/reference.html" class="sidebar-item">参考文献生成</a>
+    <a href="/templates/outline.html" class="sidebar-item">自动目录生成</a>
+    <a href="/templates/proof.html" class="sidebar-item active">语法与错字校对</a>
+    <a href="/templates/check.html" class="sidebar-item">合规语句优化</a>
+    <a href="/templates/reduce.html" class="sidebar-item">智能降重</a>
   </div>
 
   <div class="wrap">
@@ -207,53 +207,29 @@
     }
 
     async function startCheck() {
-      const input = document.getElementById('inputText').value.trim();
-      const resultBox = document.getElementById('resultBox');
-      if (!input) return alert('请输入需要校对的文本');
-
-      resultBox.style.display = 'block';
-      resultBox.innerText = "AI 校对中，请稍候...";
+      const ipt = document.getElementById('inputText').value.trim();
+      const box = document.getElementById('resultBox');
+      if (!ipt) { alert('请输入内容'); return; }
+      box.style.display = 'block';
+      box.innerText = '论文校对中，请稍候...';
 
       try {
-        const res = await fetch("https://free.gpt.coder.run/v1/chat/completions", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            model: "gpt-3.5-turbo",
-            messages: [
-              {
-                role: "system",
-                content: "你是专业论文校对助手，检查错别字、语病、标点、不通顺语句，列出问题+修改建议，最后输出完整修正版。"
-              },
-              { role: "user", content: input }
-            ]
-          })
+        const r = await fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ msg: ipt })
         });
-
-        const json = await res.json();
-        resultBox.innerText = json.choices[0].message.content;
-      } catch (err) {
-        try {
-          const res = await fetch("https://api.ahriknow.com/ai/gpt", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              prompt: input,
-              system: "你是论文校对专家，只做校对：错字、病句、标点。"
-            })
-          });
-          const json = await res.json();
-          resultBox.innerText = json.data;
-        } catch (e) {
-          resultBox.innerText = "校对失败：网络或接口拥挤，10秒后再试";
-        }
+        const j = await r.json();
+        box.innerText = j.reply || '校对完成';
+      } catch (e) {
+        box.innerText = '校对失败，请稍后重试';
       }
     }
 
     function copyResult() {
-      const box = document.getElementById('resultBox');
-      if(!box.innerText || box.innerText.includes("校对中")) return alert("请先完成校对");
-      navigator.clipboard.writeText(box.innerText).then(()=>alert("✅ 复制成功")).catch(()=>alert("复制失败"));
+      const t = document.getElementById('resultBox').innerText;
+      if (!t || t.includes('校对中')) { alert('请先校对'); return; }
+      navigator.clipboard.writeText(t).then(() => alert('复制成功')).catch(() => alert('复制失败'));
     }
   </script>
 </body>
