@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>语法与错字校对 · Thesis Flow</title>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: "PingFang SC", "SF Pro Display", "Inter", sans-serif;
+      background: #f0f6f9;
+      color: #1f2937;
+      line-height: 1.7;
+      overflow-x: hidden;
+    }
+    .sidebar {
+      position: fixed;
+      top: 0;
+      right: 0;
+      width: 170px;
+      height: 100vh;
+      background: transparent;
+      padding: 60px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 22px;
+      z-index: 99;
+    }
+    .sidebar-item {
+      font-size: 14px;
+      color: #555;
+      text-decoration: none;
+      position: relative;
+      padding-bottom: 6px;
+      cursor: pointer;
+      transition: 0.2s ease;
+    }
+    .sidebar-item::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      bottom: 0;
+      width: 100%;
+      height: 1px;
+      background: #dce3ed;
+    }
+    .sidebar-item.active {
+      color: #1f2937;
+      font-weight: 600;
+    }
+    .sidebar-item.active::after {
+      height: 2px;
+      background: #1f2937;
+    }
+    .page-transition {
+      position: fixed;
+      inset: 0;
+      background: #f0f6f9;
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.6s ease;
+    }
+    .page-transition.active { opacity: 1; pointer-events: all; }
+    .transition-line {
+      height: 2px;
+      border-radius: 999px;
+      background: #1f2937;
+      width: 5%;
+      opacity: 0.85;
+      animation: lineExpand 1.4s ease-in-out infinite;
+    }
+    .transition-tip {
+      margin-top: 14px;
+      font-size: 13px;
+      color: #6b7280;
+      opacity: 0.7;
+    }
+    @keyframes lineExpand {
+      0% { width:5%; }
+      50% { width:90%; }
+      100% { width:5%; }
+    }
+    nav {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 28px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      background: rgba(240,246,249,0.85);
+      backdrop-filter: blur(12px);
+      z-index: 98;
+    }
+    .back { display:flex;align-items:center;gap:8px;color:#1f2937;font-size:14px;cursor:pointer; }
+    .title { font-size:20px;font-weight:600; }
+    .container { max-width: 900px; margin: 0 auto; padding: 40px 24px; }
+    .page-title { font-size:28px; margin-bottom: 8px; }
+    .desc { color:#4b5563; margin-bottom: 32px; }
+    .card {
+      background:#fff;
+      border-radius:18px;
+      padding:28px;
+      border:1px solid rgba(0,0,0,0.05);
+      box-shadow:0 10px 30px rgba(0,0,0,0.04);
+    }
+    .top-select {
+      width:100%;
+      padding:14px 16px;
+      border:1px solid #e5e7eb;
+      border-radius:10px;
+      font-size:15px;
+      margin-bottom:16px;
+    }
+    .content-area {
+      width:100%;
+      min-height:460px;
+      padding:16px;
+      border:1px solid #e5e7eb;
+      border-radius:10px;
+      font-size:15px;
+      resize:vertical;
+      outline:none;
+    }
+    .actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+      margin-top: 16px;
+    }
+    button {
+      padding:11px 20px;
+      border-radius:8px;
+      font-size:14px;
+      cursor:pointer;
+      transition:all 0.25s ease;
+      border:none;
+    }
+    .primary { background:#1f2937;color:#fff; }
+    .primary:hover { background:#111827; }
+    .secondary { background:transparent;border:1px solid #d1d5db; }
+    .result {
+      margin-top:24px;
+      padding:18px;
+      background:#f3f4f6;
+      border-radius:10px;
+      white-space:pre-wrap;
+      display:none;
+    }
+    .wrap {
+      opacity:0;
+      transform:translateY(24px);
+      filter:blur(2px);
+      animation:pageEnter 1.3s ease-out 0.15s forwards;
+    }
+    @keyframes pageEnter {
+      to{opacity:1;transform:translateY(0);filter:blur(0);}
+    }
+  </style>
+</head>
+<body>
+  <div class="page-transition" id="transition">
+    <div class="transition-line"></div>
+    <div class="transition-tip">Loading...</div>
+  </div>
+
+  <div class="sidebar">
+    <a href="/" class="sidebar-item">首页</a>
+    <a href="/format.html" class="sidebar-item">论文格式排版</a>
+    <a href="/reference.html" class="sidebar-item">参考文献生成</a>
+    <a href="/outline.html" class="sidebar-item">自动目录生成</a>
+    <a href="/proof.html" class="sidebar-item active">语法与错字校对</a>
+    <a href="/check.html" class="sidebar-item">合规语句优化</a>
+    <a href="/reduce.html" class="sidebar-item">智能降重</a>
+  </div>
+
+  <div class="wrap">
+    <nav>
+      <div class="back" onclick="goIndex()">
+        <i data-lucide="arrow-left" style="width:16px;height:16px"></i>
+        返回
+      </div>
+      <div class="title">语法与错字校对</div>
+      <div></div>
+    </nav>
+    <div class="container">
+      <h1 class="page-title">语法与错字校对</h1>
+      <p class="desc">全自动检查错别字、语病、标点错误，优化论文严谨度</p>
+      <div class="card">
+        <select class="top-select">
+          <option>通用学术校对</option>
+          <option>文科专业校对</option>
+          <option>工科严谨模式</option>
+        </select>
+        <textarea id="inputText" class="content-area" placeholder="粘贴需要检测的论文内容，一键纠错润色"></textarea>
+
+        <div class="actions">
+          <button class="secondary" onclick="copyResult()">一键复制</button>
+          <button class="primary" onclick="startCheck()">开始校对</button>
+        </div>
+        <div id="resultBox" class="result"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    lucide.createIcons();
+    const transition = document.getElementById('transition');
+
+    function goIndex() {
+      transition.classList.add('active');
+      setTimeout(() => window.location.href = '/', 700);
+    }
+
+    async function startCheck() {
+      const input = document.getElementById('inputText').value.trim();
+      const resultBox = document.getElementById('resultBox');
+      if (!input) return alert('请输入需要校对的文本');
+
+      resultBox.style.display = 'block';
+      resultBox.innerText = "AI 校对中，请稍候...";
+
+      try {
+        const res = await fetch("/api/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            model: "qwen/Qwen2-7B-Instruct",
+            messages: [
+              {
+                role: "system",
+                content: "你是专业论文校对员，严格检查：错别字、用词错误、语法病句、缺少标点、语句不通顺。逐条列出错误、原因、修改建议，最后输出完整修正文本。"
+              },
+              { role: "user", content: input }
+            ],
+            temperature: 0.2
+          })
+        });
+
+        const json = await res.json();
+        if (json.error) throw new Error(json.error.message);
+        resultBox.innerText = json.choices[0].message.content;
+      } catch (err) {
+        resultBox.innerText = "请求失败：" + err.message;
+        console.error(err);
+      }
+    }
+
+    function copyResult() {
+      const box = document.getElementById('resultBox');
+      if(!box.innerText) return alert("请先点击开始校对");
+      navigator.clipboard.writeText(box.innerText)
+        .then(()=>alert("✅ 复制成功"))
+        .catch(()=>alert("复制失败"));
+    }
+  </script>
+</body>
+</html>
