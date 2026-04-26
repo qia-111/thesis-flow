@@ -111,14 +111,6 @@
       border:1px solid rgba(0,0,0,0.05);
       box-shadow:0 10px 30px rgba(0,0,0,0.04);
     }
-    .top-select {
-      width:100%;
-      padding:14px 16px;
-      border:1px solid #e5e7eb;
-      border-radius:10px;
-      font-size:15px;
-      margin-bottom:16px;
-    }
     .content-area {
       width:100%;
       min-height:460px;
@@ -194,11 +186,6 @@
       <h1 class="page-title">语法与错字校对</h1>
       <p class="desc">全自动检查错别字、语病、标点错误，优化论文严谨度</p>
       <div class="card">
-        <select class="top-select">
-          <option>通用学术校对</option>
-          <option>文科专业校对</option>
-          <option>工科严谨模式</option>
-        </select>
         <textarea id="inputText" class="content-area" placeholder="粘贴需要检测的论文内容，一键纠错润色"></textarea>
 
         <div class="actions">
@@ -228,37 +215,45 @@
       resultBox.innerText = "AI 校对中，请稍候...";
 
       try {
-        const res = await fetch("/api/chat", {
+        const res = await fetch("https://free.gpt.coder.run/v1/chat/completions", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            model: "qwen/Qwen2-7B-Instruct",
+            model: "gpt-3.5-turbo",
             messages: [
               {
                 role: "system",
-                content: "你是专业论文校对员，严格检查：错别字、用词错误、语法病句、缺少标点、语句不通顺。逐条列出错误、原因、修改建议，最后输出完整修正文本。"
+                content: "你是专业论文校对助手，检查错别字、语病、标点、不通顺语句，列出问题+修改建议，最后输出完整修正版。"
               },
               { role: "user", content: input }
-            ],
-            temperature: 0.2
+            ]
           })
         });
 
         const json = await res.json();
-        if (json.error) throw new Error(json.error.message);
         resultBox.innerText = json.choices[0].message.content;
       } catch (err) {
-        resultBox.innerText = "请求失败：" + err.message;
-        console.error(err);
+        try {
+          const res = await fetch("https://api.ahriknow.com/ai/gpt", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              prompt: input,
+              system: "你是论文校对专家，只做校对：错字、病句、标点。"
+            })
+          });
+          const json = await res.json();
+          resultBox.innerText = json.data;
+        } catch (e) {
+          resultBox.innerText = "校对失败：网络或接口拥挤，10秒后再试";
+        }
       }
     }
 
     function copyResult() {
       const box = document.getElementById('resultBox');
-      if(!box.innerText) return alert("请先点击开始校对");
-      navigator.clipboard.writeText(box.innerText)
-        .then(()=>alert("✅ 复制成功"))
-        .catch(()=>alert("复制失败"));
+      if(!box.innerText || box.innerText.includes("校对中")) return alert("请先完成校对");
+      navigator.clipboard.writeText(box.innerText).then(()=>alert("✅ 复制成功")).catch(()=>alert("复制失败"));
     }
   </script>
 </body>
