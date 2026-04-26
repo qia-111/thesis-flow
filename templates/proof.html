@@ -212,37 +212,56 @@
       if (!input) return alert('请输入需要校对的文本');
 
       resultBox.style.display = 'block';
-      resultBox.innerText = "正在快速校对，请稍等...";
+      resultBox.innerText = "正在校对，请稍候...";
 
       const controller = new AbortController();
-      // 设置15秒超时，直接杜绝响应过长
       const timeout = setTimeout(() => controller.abort(), 15000);
 
-      try {
-        const res = await fetch("https://chatapi.littlewheat.com/v1/chat/completions", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          signal: controller.signal,
-          body: JSON.stringify({
-            model: "gpt-3.5-turbo",
-            messages: [
-              {
-                role: "system",
-                content: "你是专业论文校对老师，严格检查错别字、病句、标点、用词错误，标出问题并给出修改建议，最后给出完整修改后的正文，回答简洁清晰。"
-              },
-              { role: "user", content: input }
-            ],
-            temperature: 0.3
-          })
-        });
+      // 双接口兜底
+      const apis = [
+        {
+          url: "https://chatapi.littlewheat.com/v1/chat/completions",
+          handler: (r) => r.json().then(j => j.choices[0].message.content)
+        },
+        {
+          url: "https://api.ahriknow.com/ai/gpt",
+          handler: (r) => r.json().then(j => j.data)
+        }
+      ];
 
-        clearTimeout(timeout);
-        const json = await res.json();
-        resultBox.innerText = json.choices[0].message.content;
-      } catch (err) {
-        clearTimeout(timeout);
-        resultBox.innerText = "当前线路拥挤，刷新页面稍后再试即可，日常使用都很快";
+      for (const api of apis) {
+        try {
+          const res = await fetch(api.url, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            signal: controller.signal,
+            body: JSON.stringify({
+              model: "gpt-3.5-turbo",
+              messages: [
+                {
+                  role: "system",
+                  content: "你是专业论文校对老师，严格检查错别字、病句、标点、用词错误，标出问题并给出修改建议，最后给出完整修改后的正文，回答简洁清晰。"
+                },
+                { role: "user", content: input }
+              ],
+              prompt: input
+            })
+          });
+
+          clearTimeout(timeout);
+          const text = await api.handler(res);
+          if (text && !text.includes("拥挤")) {
+            resultBox.innerText = text;
+            return;
+          }
+        } catch (err) {
+          // 静默失败，自动切下一个接口
+          continue;
+        }
       }
+
+      clearTimeout(timeout);
+      resultBox.innerText = "当前所有线路均拥挤，请稍后再试";
     }
 
     function copyResult() {
