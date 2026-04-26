@@ -7,8 +7,8 @@ export default async function handler(req) {
     return new Response('Method Not Allowed', { status: 405 });
   }
 
-  // 把你的 SiliconFlow Key 填在这里
-  const API_KEY = "sk-bfuumqrfkflvoeuuivbxcbgjyufctagctczemzoytghnpkxx";
+
+  const API_KEY = "sk-gtpgqzmpbuprsgcxlkczwregukmrnjytnknvosebunavfbyc";
 
   try {
     const body = await req.json();
