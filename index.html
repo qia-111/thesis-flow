@@ -3,87 +3,219 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>论文智能助手 · Thesis Flow</title>
+  <title>Thesis Flow · 让论文写作更流畅</title>
   <script src="https://unpkg.com/lucide@latest"></script>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
       font-family: "PingFang SC", "SF Pro Display", "Inter", sans-serif;
-      background: #f0f6f9;
+      background: #f9fafb;
       color: #1f2937;
       line-height: 1.7;
+      overflow-x: hidden;
     }
-    .container {
-      max-width: 900px;
+    .page-transition {
+      position: fixed;
+      inset: 0;
+      background: #f9fafb;
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.6s ease;
+    }
+    .page-transition.active { opacity: 1; pointer-events: all; }
+    .transition-line {
+      height: 2px;
+      border-radius: 999px;
+      background: #1f2937;
+      width: 5%;
+      opacity: 0.85;
+      transform: scaleY(1);
+      animation: lineExpand 1.4s ease-in-out infinite;
+    }
+    .transition-tip {
+      margin-top: 14px;
+      font-size: 13px;
+      color: #6b7280;
+      opacity: 0.7;
+      letter-spacing: 1px;
+    }
+    @keyframes lineExpand {
+      0%   { width:5%; }
+      50%  { width:90%; }
+      100% { width:5%; }
+    }
+    .page-transition.reveal { animation: lineReveal 0.75s ease-out forwards; }
+    @keyframes lineReveal {
+      0%   { clip-path: inset(47% 0 47% 0); opacity: 1; }
+      100% { clip-path: inset(0% 0 0% 0);    opacity: 0; }
+    }
+    .main-wrap {
+      opacity: 0;
+      transform: translateY(24px);
+      filter: blur(2px);
+      animation: pageEnter 1.3s ease-out 0.2s forwards;
+    }
+    @keyframes pageEnter { to { opacity: 1; transform: translateY(0); filter: blur(0); } }
+    .page-bg {
+      position: fixed;
+      inset: 0;
+      background-image: url('https://images.pexels.com/photos/5904937/pexels-photo-5904937.jpeg');
+      background-size: cover;
+      background-position: center;
+      opacity: 0.04;
+      z-index: -1;
+    }
+    nav {
+      max-width: 1100px;
       margin: 0 auto;
-      padding: 60px 24px;
+      padding: 28px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      background: rgba(249,250,251,0.7);
+      backdrop-filter: blur(12px);
+      box-shadow: 0 6px 20px rgba(0,0,0,0.05);
+      border-bottom: 1px solid rgba(0,0,0,0.04);
+      z-index: 99;
     }
-    .title {
-      font-size: 32px;
-      font-weight: 700;
-      margin-bottom: 12px;
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 20px;
+      font-weight: 600;
+      color: #111827;
     }
-    .desc {
-      color: #4b5563;
-      font-size: 16px;
-      margin-bottom: 40px;
+    .logo-icon {
+      width: 32px;
+      height: 16px;
+      background: #111827;
+      clip-path: polygon(0 0, 100% 0, 80% 100%, 20% 100%);
     }
-    .grid {
+    .logo span { opacity: 0.6; font-weight: 400; }
+    .container { max-width: 1100px; margin: 0 auto; padding: 60px 24px; }
+    .hero { margin-bottom: 80px; text-align: center; }
+    .hero h1 { font-size: 44px; font-weight: 600; margin-bottom: 16px; line-height: 1.2; color: #111827; }
+    .hero h1 span { color: #4b5563; font-weight: 400; }
+    .hero p { font-size: 18px; color: #4b5563; max-width: 600px; margin: 0 auto; }
+
+    .features {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
-      gap: 20px;
+      gap: 32px;
+      margin-bottom: 90px;
     }
     .card {
       background: #fff;
-      border-radius: 16px;
-      padding: 24px;
+      border-radius: 18px;
+      padding: 36px;
       border: 1px solid rgba(0,0,0,0.05);
-      box-shadow: 0 8px 24px rgba(0,0,0,0.05);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.04);
+      transition: all 0.3s ease;
       cursor: pointer;
-      transition: transform 0.2s ease;
     }
     .card:hover {
       transform: translateY(-3px);
+      box-shadow: 0 15px 40px rgba(0,0,0,0.07);
     }
-    .card-title {
-      font-size: 17px;
-      font-weight: 600;
-      margin-bottom: 8px;
+    .card h3 { font-size: 20px; font-weight: 600; margin-bottom: 12px; display: flex; align-items: center; gap: 10px; }
+    .card p { font-size: 15px; color: #4b5563; margin-bottom: 20px; }
+    .enter-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: #1f2937;
+      font-size: 14px;
+      font-weight: 500;
+      border-bottom: 1px solid #1f2937;
+      padding-bottom: 2px;
     }
-    .card-desc {
+
+    footer {
+      text-align: center;
+      padding: 40px 20px;
       font-size: 14px;
       color: #6b7280;
+      border-top: 1px solid rgba(0,0,0,0.04);
+    }
+    @media (max-width: 768px) {
+      .features { grid-template-columns: 1fr; }
+      .hero h1 { font-size: 32px; }
     }
   </style>
 </head>
 <body>
+  <div class="page-transition" id="transition">
+    <div class="transition-line"></div>
+    <div class="transition-tip">Loading...</div>
+  </div>
+  <div class="page-bg"></div>
+  <div class="main-wrap">
+    <nav>
+      <div class="logo"><div class="logo-icon"></div>Thesis <span>Flow</span></div>
+    </nav>
+    <div class="container">
+      <section class="hero">
+        <h1>让论文写作<br><span>保持流畅</span></h1>
+        <p>格式、引用、校对、润色、降重，一站式论文辅助工具</p>
+      </section>
 
-  <div class="container">
-    <h1 class="title">论文智能助手</h1>
-    <p class="desc">一站式论文排版、校对、优化工具</p>
+      <div class="features">
+        <div class="card" onclick="goTo('format')">
+          <h3><i data-lucide="file-text" style="width:18px;height:18px"></i> 论文格式排版</h3>
+          <p>一键统一字体、行距、段落、页眉页脚，快速适配院校规范</p>
+          <span class="enter-btn">进入工具 <i data-lucide="arrow-right" style="width:14px;height:14px"></i></span>
+        </div>
 
-    <div class="grid">
-      <div class="card" onclick="window.location.href='/templates/proof.html'">
-        <div class="card-title">语法与错字校对</div>
-        <div class="card-desc">自动检查错别字、语病、标点</div>
-      </div>
+        <div class="card" onclick="goTo('reference')">
+          <h3><i data-lucide="book-marked" style="width:18px;height:18px"></i> 参考文献生成</h3>
+          <p>支持 GB/T 7714、IEEE、APA、MLA 等多格式自动排版</p>
+          <span class="enter-btn">进入工具 <i data-lucide="arrow-right" style="width:14px;height:14px"></i></span>
+        </div>
 
-      <div class="card" onclick="window.location.href='/templates/format.html'">
-        <div class="card-title">论文格式排版</div>
-        <div class="card-desc">自动排版段落、行距、标题层级</div>
-      </div>
+        <div class="card" onclick="goTo('outline')">
+          <h3><i data-lucide="list" style="width:18px;height:18px"></i> 自动目录生成</h3>
+          <p>智能识别标题层级，快速生成标准论文目录结构</p>
+          <span class="enter-btn">进入工具 <i data-lucide="arrow-right" style="width:14px;height:14px"></i></span>
+        </div>
 
-      <div class="card" onclick="window.location.href='/templates/reference.html'">
-        <div class="card-title">参考文献生成</div>
-        <div class="card-desc">一键生成标准格式引用</div>
-      </div>
+        <div class="card" onclick="goTo('proof')">
+          <h3><i data-lucide="spell-check" style="width:18px;height:18px"></i> 语法与错字校对</h3>
+          <p>自动检查文字错误、语句不通顺，提升论文严谨性</p>
+          <span class="enter-btn">进入工具 <i data-lucide="arrow-right" style="width:14px;height:14px"></i></span>
+        </div>
 
-      <div class="card" onclick="window.location.href='/templates/outline.html'">
-        <div class="card-title">自动目录生成</div>
-        <div class="card-desc">智能识别标题，生成规范目录</div>
+        <div class="card" onclick="goTo('check')">
+          <h3><i data-lucide="scan-face" style="width:18px;height:18px"></i> 合规语句优化</h3>
+          <p>温和润色论文语句，保持学术规范，提升表达流畅度</p>
+          <span class="enter-btn">进入工具 <i data-lucide="arrow-right" style="width:14px;height:14px"></i></span>
+        </div>
+
+        <div class="card" onclick="goTo('reduce')">
+          <h3><i data-lucide="refresh-ccw" style="width:18px;height:18px"></i> 智能降重</h3>
+          <p style="opacity:0.6;">重构语句表达，优化行文逻辑，贴合学术写作要求</p>
+          <span class="enter-btn">进入工具 <i data-lucide="arrow-right" style="width:14px;height:14px"></i></span>
+        </div>
       </div>
     </div>
+
+    <footer>Thesis Flow © 2026 · 高效论文辅助工具</footer>
   </div>
 
+  <script>
+    lucide.createIcons();
+    const transition = document.getElementById('transition');
+    function goTo(page) {
+      transition.classList.add('active');
+      setTimeout(() => { window.location.href = `/templates/${page}.html`; }, 700);
+    }
+  </script>
 </body>
 </html>
