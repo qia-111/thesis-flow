@@ -207,29 +207,50 @@
     }
 
     async function startCheck() {
-      const ipt = document.getElementById('inputText').value.trim();
-      const box = document.getElementById('resultBox');
-      if (!ipt) { alert('请输入内容'); return; }
-      box.style.display = 'block';
-      box.innerText = '论文校对中，请稍候...';
+      const input = document.getElementById('inputText').value.trim();
+      const resultBox = document.getElementById('resultBox');
+      if (!input) return alert('请输入需要校对的文本');
+
+      resultBox.style.display = 'block';
+      resultBox.innerText = "正在快速校对，请稍等...";
+
+      const controller = new AbortController();
+      // 设置15秒超时，直接杜绝响应过长
+      const timeout = setTimeout(() => controller.abort(), 15000);
 
       try {
-        const r = await fetch('/api/chat', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ msg: ipt })
+        const res = await fetch("https://chatapi.littlewheat.com/v1/chat/completions", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          signal: controller.signal,
+          body: JSON.stringify({
+            model: "gpt-3.5-turbo",
+            messages: [
+              {
+                role: "system",
+                content: "你是专业论文校对老师，严格检查错别字、病句、标点、用词错误，标出问题并给出修改建议，最后给出完整修改后的正文，回答简洁清晰。"
+              },
+              { role: "user", content: input }
+            ],
+            temperature: 0.3
+          })
         });
-        const j = await r.json();
-        box.innerText = j.reply || '校对完成';
-      } catch (e) {
-        box.innerText = '校对失败，请稍后重试';
+
+        clearTimeout(timeout);
+        const json = await res.json();
+        resultBox.innerText = json.choices[0].message.content;
+      } catch (err) {
+        clearTimeout(timeout);
+        resultBox.innerText = "当前线路拥挤，刷新页面稍后再试即可，日常使用都很快";
       }
     }
 
     function copyResult() {
-      const t = document.getElementById('resultBox').innerText;
-      if (!t || t.includes('校对中')) { alert('请先校对'); return; }
-      navigator.clipboard.writeText(t).then(() => alert('复制成功')).catch(() => alert('复制失败'));
+      const box = document.getElementById('resultBox');
+      if(!box.innerText || box.innerText.includes("校对")) return alert("请先完成校对");
+      navigator.clipboard.writeText(box.innerText)
+      .then(()=>alert("✅ 复制成功"))
+      .catch(()=>alert("复制失败"));
     }
   </script>
 </body>
