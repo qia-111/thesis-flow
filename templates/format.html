@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>论文格式排版 · Thesis Flow</title>
-  <script src="httpsunpkg.com/lucide@latest"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
@@ -14,81 +14,7 @@
       line-height: 1.7;
       overflow-x: hidden;
     }
-    .sidebar {
-      position: fixed;
-      top: 0;
-      right: 0;
-      width: 170px;
-      height: 100vh;
-      background: transparent;
-      padding: 60px 20px;
-      display: flex;
-      flex-direction: column;
-      gap: 22px;
-      z-index: 99;
-    }
-    .sidebar-item {
-      font-size: 14px;
-      color: #555;
-      text-decoration: none;
-      position: relative;
-      padding-bottom: 6px;
-      cursor: pointer;
-      transition: 0.2s ease;
-    }
-    .sidebar-item::after {
-      content: "";
-      position: absolute;
-      left: 0;
-      bottom: 0;
-      width: 100%;
-      height: 1px;
-      background: #dce3ed;
-    }
-    .sidebar-item.active {
-      color: #1f2937;
-      font-weight: 600;
-    }
-    .sidebar-item.active::after {
-      height: 2px;
-      background: #1f2937;
-    }
-    .page-transition {
-      position: fixed;
-      inset: 0;
-      background: #f0f6f9;
-      z-index: 9999;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.6s ease;
-    }
-    .page-transition.active { opacity: 1; pointer-events: all; }
-    .transition-line {
-      height: 2px;
-      border-radius: 999px;
-      background: #1f2937;
-      width: 5%;
-      opacity: 0.85;
-      transform: scaleY(1);
-      animation: lineExpand 1.4s ease-in-out infinite;
-    }
-    .transition-tip {
-      margin-top: 14px;
-      font-size: 13px;
-      color: #6b7280;
-      opacity: 0.7;
-      letter-spacing: 1px;
-    }
-    @keyframes lineExpand {
-      0%   { width:5%; }
-      50%  { width:90%; }
-      100% { width:5%; }
-    }
-    nav {
+    .page-header {
       max-width: 900px;
       margin: 0 auto;
       padding: 28px 24px;
@@ -101,8 +27,9 @@
       backdrop-filter: blur(12px);
       z-index: 98;
     }
-    .back { display:flex;align-items:center;gap:8px;color:#1f2937;font-size:14px;cursor:pointer; }
-    .title { font-size:20px;font-weight:600; }
+    .back-btn {
+      display:flex;align-items:center;gap:8px;color:#1f2937;font-size:14px;cursor:pointer;
+    }
     .container { max-width: 900px; margin: 0 auto; padding: 40px 24px; }
     .page-title { font-size:28px; margin-bottom: 8px; }
     .desc { color:#4b5563; margin-bottom: 32px; }
@@ -113,13 +40,14 @@
       border:1px solid rgba(0,0,0,0.05);
       box-shadow:0 10px 30px rgba(0,0,0,0.04);
     }
-    .top-select {
+    .select-area {
       width:100%;
-      padding:14px 16px;
+      padding:16px;
       border:1px solid #e5e7eb;
       border-radius:10px;
       font-size:15px;
       margin-bottom:16px;
+      background:#fff;
     }
     .content-area {
       width:100%;
@@ -168,57 +96,104 @@
   </style>
 </head>
 <body>
-  <div class="page-transition" id="transition">
-    <div class="transition-line"></div>
-    <div class="transition-tip">Loading...</div>
-  </div>
-
-  <div class="sidebar">
-    <a href="/" class="sidebar-item">首页</a>
-    <a href="/format" class="sidebar-item active">论文格式排版</a>
-    <a href="/reference" class="sidebar-item">参考文献生成</a>
-    <a href="/outline" class="sidebar-item">自动目录生成</a>
-    <a href="/proof" class="sidebar-item">语法与错字校对</a>
-    <a href="/check" class="sidebar-item">合规语句优化</a>
-    <a href="/reduce" class="sidebar-item">智能降重</a>
-  </div>
-
   <div class="wrap">
-    <nav>
-      <div class="back" onclick="goIndex()">
+    <div class="page-header">
+      <div class="back-btn" onclick="goIndex()">
         <i data-lucide="arrow-left" style="width:16px;height:16px"></i>
         返回
       </div>
       <div class="title">论文格式排版</div>
       <div></div>
-    </nav>
+    </div>
     <div class="container">
       <h1 class="page-title">论文格式排版</h1>
       <p class="desc">一键统一字体、行距、段落格式，快速适配院校规范</p>
       <div class="card">
-        <select class="top-select">
+        <select class="select-area">
           <option>本科通用格式</option>
-          <option>硕士论文规范</option>
-          <option>专科院校标准</option>
+          <option>硕士论文格式</option>
+          <option>期刊投稿格式</option>
         </select>
-        <textarea class="content-area" placeholder="粘贴需要排版的论文内容，一键标准化格式"></textarea>
+        <textarea id="inputText" class="content-area" placeholder="粘贴需要排版的论文内容，一键标准化格式"></textarea>
+
         <div class="actions">
-          <button class="secondary">一键复制</button>
-          <button class="primary">开始排版</button>
+          <button class="secondary" onclick="copyResult()">一键复制</button>
+          <button class="primary" onclick="startFormat()">开始排版</button>
         </div>
-        <div class="result"></div>
+        <div id="resultBox" class="result"></div>
       </div>
     </div>
   </div>
 
   <script>
     lucide.createIcons();
-    const transition = document.getElementById('transition');
+
+    // 修复后的返回首页函数
     function goIndex() {
-      transition.classList.add('active');
-      setTimeout(() => {
-        window.location.href = '/';
-      }, 700);
+      window.location.href = '/';
+    }
+
+    async function startFormat() {
+      const input = document.getElementById('inputText').value.trim();
+      const resultBox = document.getElementById('resultBox');
+      if (!input) return alert('请输入需要排版的文本');
+
+      resultBox.style.display = 'block';
+      resultBox.innerText = "正在排版，请稍候...";
+
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 15000);
+
+      const apis = [
+        {
+          url: "https://chatapi.littlewheat.com/v1/chat/completions",
+          handler: (r) => r.json().then(j => j.choices[0].message.content)
+        },
+        {
+          url: "https://api.ahriknow.com/ai/gpt",
+          handler: (r) => r.json().then(j => j.data)
+        }
+      ];
+
+      for (const api of apis) {
+        try {
+          const res = await fetch(api.url, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            signal: controller.signal,
+            body: JSON.stringify({
+              model: "gpt-3.5-turbo",
+              messages: [
+                {
+                  role: "system",
+                  content: "你是专业论文格式助手，按本科通用格式整理论文：规范标题层级、段落缩进、行距，输出格式清晰的正文。"
+                },
+                { role: "user", content: input }
+              ]
+            })
+          });
+
+          clearTimeout(timeout);
+          const text = await api.handler(res);
+          if (text && !text.includes("拥挤")) {
+            resultBox.innerText = text;
+            return;
+          }
+        } catch (err) {
+          continue;
+        }
+      }
+
+      clearTimeout(timeout);
+      resultBox.innerText = "当前线路拥挤，请稍后再试";
+    }
+
+    function copyResult() {
+      const box = document.getElementById('resultBox');
+      if(!box.innerText || box.innerText.includes("排版")) return alert("请先完成排版");
+      navigator.clipboard.writeText(box.innerText)
+      .then(()=>alert("✅ 复制成功"))
+      .catch(()=>alert("复制失败"));
     }
   </script>
 </body>
